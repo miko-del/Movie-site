@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Player</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header><a href="index.html">← Back</a></header>
+  <main>
+    <h2 id="title"></h2>
+    <p id="desc"></p>
+
+    <!-- Video area -->
+    <div id="playerWrap">
+      <video id="video" controls playsinline style="width:100%;max-width:900px;"></video>
+    </div>
+  </main>
+
+  <!-- hls.js for HLS playback if needed -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.0/dist/hls.min.js"></script>
+  <script>
+    function getQuery(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+    const id = getQuery('id');
+    const movie = JSON.parse(localStorage.getItem('movie_' + id) || 'null');
+
+    if (!movie) {
+      document.body.innerHTML = '<p>Movie not found.</p>';
+      throw new Error('Movie not found');
+    }
+    document.getElementById('title').textContent = movie.title;
+    document.getElementById('desc').textContent = movie.description;
+
+    const video = document.getElementById('video');
+    const src = movie.videoUrl;
+
+    // If HLS (.m3u8) and browser doesn't natively support HLS, use hls.js
+    if (src.endsWith('.m3u8')) {
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = src;
+      } else if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(src);
+        hls.attachMedia(video);
+      } else {
+        video.outerHTML = '<p>Your browser does not support HLS playback.</p>';
+      }
+    } else {
+      // mp4 fallback
+      video.src = src;
+    }
+  </script>
+</body>
+</html>
